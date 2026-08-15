@@ -1,0 +1,44 @@
+name: Simulazione Traffico Benares
+
+on:
+  schedule:
+    # Esegue ogni 6 ore (4 volte al giorno)
+    - cron: '0 */6 * * *'
+  # Permette esecuzione manuale
+  workflow_dispatch:
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        playwright install chromium
+    
+    - name: Run simulation
+      run: python simulate.py
+      env:
+        SERP_API_KEY: ${{ secrets.SERP_API_KEY }}
+        PROXY_USERNAME: ${{ secrets.PROXY_USERNAME }}
+        PROXY_PASSWORD: ${{ secrets.PROXY_PASSWORD }}
+        PROXY_HOST: ${{ secrets.PROXY_HOST }}
+        PROXY_PORT: ${{ secrets.PROXY_PORT }}
+    
+    - name: Upload logs (if failed)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: logs
+        path: |
+          *.log
+          *.txt
