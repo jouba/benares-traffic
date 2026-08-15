@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 import requests
 from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
+from playwright_stealth import stealth
 
 # Configurazione Logging
 logging.basicConfig(
@@ -143,8 +143,8 @@ async def simulate_visit(url, proxy_url):
             page = await context.new_page()
             
             # Applica Stealth per nascondere l'automazione
-            await stealth_async(page)
-            
+			await stealth(page)
+
             # Naviga alla pagina
             await page.goto(url, wait_until='networkidle', timeout=30000)
             
