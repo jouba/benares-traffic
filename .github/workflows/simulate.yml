@@ -13,10 +13,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6  # Aggiornato a v6 (Node.js 24)
     
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6  # Aggiornato a v6 (Node.js 24)
       with:
         python-version: '3.11'
     
@@ -24,6 +24,7 @@ jobs:
       run: |
         pip install -r requirements.txt
         playwright install chromium
+        playwright install-deps
     
     - name: Run simulation
       run: python simulate.py
@@ -36,7 +37,7 @@ jobs:
     
     - name: Upload logs (if failed)
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6  # Aggiornato a v6 (Node.js 24)
       with:
         name: logs
         path: |
