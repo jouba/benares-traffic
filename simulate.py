@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Benares Traffic Simulator - Versione senza playwright-stealth
+Benares Traffic Simulator - Versione Playwright senza stealth_async
 """
 
 import os
@@ -40,7 +40,7 @@ KEYWORDS = [
 ]
 
 # ============================================
-# 1. RICERCA SU GOOGLE
+# 1. RICERCA SU GOOGLE (SERP API)
 # ============================================
 
 def search_google(keyword):
@@ -78,7 +78,7 @@ def search_google(keyword):
         return None
 
 # ============================================
-# 2. VISITA SIMULATA (senza stealth)
+# 2. VISITA SIMULATA (Playwright senza stealth)
 # ============================================
 
 async def simulate_visit(url, proxy_url):
@@ -89,7 +89,7 @@ async def simulate_visit(url, proxy_url):
     
     async with async_playwright() as p:
         try:
-            # Configura il browser
+            # Avvia browser con proxy
             browser = await p.chromium.launch(
                 headless=True,
                 proxy={"server": proxy_url},
@@ -105,6 +105,7 @@ async def simulate_visit(url, proxy_url):
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36',
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36',
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0',
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15',
             ]
             
             context = await browser.new_context(
@@ -116,23 +117,23 @@ async def simulate_visit(url, proxy_url):
             
             page = await context.new_page()
             
-            # Rimuovi i segni di automazione (senza playwright-stealth)
+            # Nasconde il segno di automazione (senza playwright-stealth)
             await page.add_init_script("""
                 Object.defineProperty(navigator, 'webdriver', {
                     get: () => undefined
                 });
             """)
             
-            # Naviga
+            # Vai alla pagina
             await page.goto(url, wait_until='networkidle', timeout=30000)
             
-            # Scrolla
+            # Scrolla lentamente
             logger.info("   ? Scrolling...")
             for _ in range(random.randint(3, 8)):
                 await page.mouse.wheel(delta_y=random.randint(200, 600))
                 await asyncio.sleep(random.uniform(0.8, 2.5))
             
-            # Clicca su link interno
+            # Clicca su un link interno (se presente)
             logger.info("   ? Cerca link interno...")
             links = await page.query_selector_all('a[href^="/"], a[href*="benaresfilm.com"]')
             if links and random.random() < 0.6:
@@ -166,7 +167,7 @@ async def simulate_visit(url, proxy_url):
             return True
             
         except Exception as e:
-            logger.error(f"? Errore: {e}")
+            logger.error(f"? Errore durante la visita: {e}")
             try:
                 await browser.close()
             except:
@@ -174,7 +175,7 @@ async def simulate_visit(url, proxy_url):
             return False
 
 # ============================================
-# 3. MAIN
+# 3. FUNZIONE PRINCIPALE
 # ============================================
 
 async def main():
@@ -200,7 +201,7 @@ async def main():
                     break
     
     if not target_url:
-        logger.error("? Impossibile trovare il sito")
+        logger.error("? Impossibile trovare il sito su Google")
         return
     
     await simulate_visit(target_url, proxy_url)
