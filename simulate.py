@@ -9,6 +9,23 @@ import random
 import asyncio
 import logging
 from datetime import datetime
+import time
+
+def casual_delay():
+    """
+    Aggiunge un ritardo casuale tra 1 e 59 minuti
+    Così l'esecuzione non parte esattamente allo stesso minuto
+    """
+    minuti = random.randint(1, 59)
+    secondi = minuti * 60
+    
+    # Aggiunge anche secondi extra per maggiore variabilità
+    secondi_extra = random.randint(0, 59)
+    totale_secondi = secondi + secondi_extra
+    
+    logger.info(f"⏰ Attendo {minuti} minuti e {secondi_extra} secondi...")
+    time.sleep(totale_secondi)
+    logger.info("✅ Attesa completata, avvio simulazione")
 
 import requests
 from playwright.async_api import async_playwright
@@ -180,9 +197,14 @@ async def simulate_visit(url, proxy_url):
 
 async def main():
     logger.info("=" * 60)
-    logger.info("? BENARES TRAFFIC SIMULATOR")
-    logger.info(f"? {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("🚀 BENARES TRAFFIC SIMULATOR")
+    logger.info(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 60)
+    
+    # === RITARDO CASUALE ===
+    # Solo se non siamo in esecuzione manuale
+    if not os.environ.get('MANUAL_RUN'):
+        casual_delay()
     
     if not SERP_API_KEY:
         logger.error("? SERP_API_KEY mancante")
