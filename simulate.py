@@ -32,11 +32,11 @@ PROXY_PORT = os.environ.get('PROXY_PORT', '9000')
 
 YOUR_DOMAIN = 'benaresfilm.com'
 KEYWORDS = [
-    'benares pierre loti spiritualità india',
-    'benares india misticismo',
+    'pierre loti spiritualità india',
+    'benares india misticismo film',
     'benares varanasi cinema letteratura',
-    'benares pierre loti india sacra',
-    'benares spiritualità indiana'
+    'pierre loti india sacra',
+    'benares spiritualità indiana film'
 ]
 
 # ============================================
