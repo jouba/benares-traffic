@@ -130,7 +130,7 @@ async def simulate_visit(url, proxy_url):
             # Scrolla lentamente
             logger.info("   ? Scrolling...")
             for _ in range(random.randint(3, 8)):
-                await page.mouse.wheel(delta_y=random.randint(200, 600))
+                await page.mouse.wheel(delta_x=0, delta_y=random.randint(200, 600))
                 await asyncio.sleep(random.uniform(0.8, 2.5))
             
             # Clicca su un link interno (se presente)
