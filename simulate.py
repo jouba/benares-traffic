@@ -11,20 +11,14 @@ import logging
 from datetime import datetime
 import time
 
-def casual_delay():
+def casual_delay_short():
     """
-    Aggiunge un ritardo casuale tra 1 e 59 minuti
-    Così l'esecuzione non parte esattamente allo stesso minuto
+    Ritardo breve (tra 10 e 120 secondi)
+    Per variare i secondi di partenza senza consumare troppo tempo
     """
-    minuti = random.randint(1, 59)
-    secondi = minuti * 60
-    
-    # Aggiunge anche secondi extra per maggiore variabilità
-    secondi_extra = random.randint(0, 59)
-    totale_secondi = secondi + secondi_extra
-    
-    logger.info(f"⏰ Attendo {minuti} minuti e {secondi_extra} secondi...")
-    time.sleep(totale_secondi)
+    secondi = random.randint(10, 120)
+    logger.info(f"⏰ Attendo {secondi} secondi...")
+    time.sleep(secondi)
     logger.info("✅ Attesa completata, avvio simulazione")
 
 import requests
@@ -201,18 +195,17 @@ async def main():
     logger.info(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 60)
     
-    # === RITARDO CASUALE ===
-    # Solo se non siamo in esecuzione manuale
+    # Ritardo breve (solo per esecuzioni automatiche)
     if not os.environ.get('MANUAL_RUN'):
-        casual_delay()
+        casual_delay_short()
     
     if not SERP_API_KEY:
-        logger.error("? SERP_API_KEY mancante")
+        logger.error("❌ SERP_API_KEY mancante")
         return
     
     proxy_url = f"http://{PROXY_USERNAME}:{PROXY_PASSWORD}@{PROXY_HOST}:{PROXY_PORT}"
     keyword = random.choice(KEYWORDS)
-    logger.info(f"? Parola chiave: '{keyword}'")
+    logger.info(f"🔑 Parola chiave: '{keyword}'")
     
     target_url = search_google(keyword)
     if not target_url:
@@ -223,11 +216,11 @@ async def main():
                     break
     
     if not target_url:
-        logger.error("? Impossibile trovare il sito su Google")
+        logger.error("❌ Impossibile trovare il sito su Google")
         return
     
     await simulate_visit(target_url, proxy_url)
-    logger.info("? Flusso completato")
+    logger.info("✅ Flusso completato")
 
 if __name__ == "__main__":
     asyncio.run(main())
