@@ -2,9 +2,8 @@ name: Simulazione Traffico Benares
 
 on:
   schedule:
-    # Esegue ogni 6 ore (4 volte al giorno)
-    - cron: '0 */6 * * *'
-  # Permette esecuzione manuale
+    # 4 visite al giorno a minuti diversi
+    - cron: '13 0,6,12,18 * * *'   # 00:13, 06:13, 12:13, 18:13
   workflow_dispatch:
 
 jobs:
@@ -13,10 +12,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v6  # Aggiornato a v6 (Node.js 24)
+      uses: actions/checkout@v6
     
     - name: Setup Python
-      uses: actions/setup-python@v6  # Aggiornato a v6 (Node.js 24)
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
     
@@ -34,6 +33,7 @@ jobs:
         PROXY_PASSWORD: ${{ secrets.PROXY_PASSWORD }}
         PROXY_HOST: ${{ secrets.PROXY_HOST }}
         PROXY_PORT: ${{ secrets.PROXY_PORT }}
+        MANUAL_RUN: ${{ github.event_name == 'workflow_dispatch' && 'true' || '' }}
     
     - name: Upload logs (if failed)
       if: failure()
