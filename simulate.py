@@ -10,17 +10,6 @@ import asyncio
 import logging
 from datetime import datetime
 import time
-
-def casual_delay_short():
-    """
-    Ritardo breve (tra 10 e 120 secondi)
-    Per variare i secondi di partenza senza consumare troppo tempo
-    """
-    secondi = random.randint(10, 120)
-    logger.info(f"⏰ Attendo {secondi} secondi...")
-    time.sleep(secondi)
-    logger.info("✅ Attesa completata, avvio simulazione")
-
 import requests
 from playwright.async_api import async_playwright
 
@@ -194,10 +183,6 @@ async def main():
     logger.info("🚀 BENARES TRAFFIC SIMULATOR")
     logger.info(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 60)
-    
-    # Ritardo breve (solo per esecuzioni automatiche)
-    if not os.environ.get('MANUAL_RUN'):
-        casual_delay_short()
     
     if not SERP_API_KEY:
         logger.error("❌ SERP_API_KEY mancante")
