@@ -2,8 +2,10 @@ name: Simulazione Traffico Benares
 
 on:
   schedule:
-    # 4 visite al giorno a minuti diversi
-    - cron: '13 0,6,12,18 * * *'   # 00:13, 06:13, 12:13, 18:13
+    - cron: '7 2 * * *'   # 02:07
+    - cron: '34 8 * * *'  # 08:34
+    - cron: '51 14 * * *' # 14:51
+    - cron: '22 20 * * *' # 20:22
   workflow_dispatch:
 
 jobs:
