@@ -78,14 +78,14 @@ def search_google(keyword):
         return None
 
 # ============================================
-# 2. VISITA SIMULATA (Playwright senza stealth)
+# 2. VISITA SIMULATA
 # ============================================
 
 async def simulate_visit(url, proxy_url):
     if not url:
         return False
     
-    logger.info(f"? Simulo visita: {url}")
+    logger.info(f"🌐 Simulo visita: {url}")
     
     async with async_playwright() as p:
         try:
@@ -96,7 +96,8 @@ async def simulate_visit(url, proxy_url):
                 args=[
                     '--disable-blink-features=AutomationControlled',
                     '--disable-dev-shm-usage',
-                    '--no-sandbox'
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox'
                 ]
             )
             
@@ -117,24 +118,41 @@ async def simulate_visit(url, proxy_url):
             
             page = await context.new_page()
             
-            # Nasconde il segno di automazione (senza playwright-stealth)
+            # Nasconde il segno di automazione
             await page.add_init_script("""
                 Object.defineProperty(navigator, 'webdriver', {
                     get: () => undefined
                 });
             """)
             
-            # Vai alla pagina
-            await page.goto(url, wait_until='networkidle', timeout=30000)
+            # === MODIFICA QUI ===
+            # Usa 'load' invece di 'networkidle'
+            await page.goto(url, wait_until='load', timeout=30000)
             
-            # Scrolla lentamente
-            logger.info("   ? Scrolling...")
-            for _ in range(random.randint(3, 8)):
-                await page.mouse.wheel(delta_x=0, delta_y=random.randint(200, 600))
-                await asyncio.sleep(random.uniform(0.8, 2.5))
+            # Aspetta che la pagina sia stabile
+            await asyncio.sleep(2)
+            
+            # === SCROLLING CON ALTERNATIVA ===
+            logger.info("   📜 Scrolling...")
+            
+            # Prova con JavaScript invece di mouse.wheel
+            try:
+                # Scrolla gradualmente con JavaScript
+                for i in range(random.randint(3, 8)):
+                    scroll_amount = random.randint(200, 600)
+                    await page.evaluate(f"window.scrollBy(0, {scroll_amount})")
+                    await asyncio.sleep(random.uniform(0.8, 2.5))
+            except Exception as e:
+                logger.warning(f"   ⚠️ Errore scrolling JS: {e}")
+                # Fallback: mouse.wheel
+                for _ in range(random.randint(3, 8)):
+                    await page.mouse.wheel(delta_x=0, delta_y=random.randint(200, 600))
+                    await asyncio.sleep(random.uniform(0.8, 2.5))
+            
+            logger.info("   ✅ Scrolling completato")
             
             # Clicca su un link interno (se presente)
-            logger.info("   ? Cerca link interno...")
+            logger.info("   👆 Cerca link interno...")
             links = await page.query_selector_all('a[href^="/"], a[href*="benaresfilm.com"]')
             if links and random.random() < 0.6:
                 valid_links = []
@@ -148,26 +166,26 @@ async def simulate_visit(url, proxy_url):
                     try:
                         if await random_link.is_visible():
                             href = await random_link.get_attribute('href')
-                            logger.info(f"   ? Clicca su: {href}")
+                            logger.info(f"   🔗 Clicca su: {href}")
                             await random_link.click()
                             await page.wait_for_load_state('networkidle', timeout=10000)
                             await asyncio.sleep(random.uniform(2, 5))
                             await page.go_back()
                             await page.wait_for_load_state('networkidle')
                     except Exception as e:
-                        logger.debug(f"   ?? Errore click: {e}")
+                        logger.debug(f"   ⚠️ Errore click: {e}")
             
             # Attesa finale
             wait_time = random.uniform(5, 15)
-            logger.info(f"   ? Attendo {wait_time:.1f} secondi...")
+            logger.info(f"   ⏳ Attendo {wait_time:.1f} secondi...")
             await asyncio.sleep(wait_time)
             
             await browser.close()
-            logger.info("? Visita completata")
+            logger.info("✅ Visita completata")
             return True
             
         except Exception as e:
-            logger.error(f"? Errore durante la visita: {e}")
+            logger.error(f"❌ Errore durante la visita: {e}")
             try:
                 await browser.close()
             except:
