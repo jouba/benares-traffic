@@ -77,10 +77,6 @@ def search_google(keyword):
         logger.error(f"? Errore SERP API: {e}")
         return None
 
-# ============================================
-# 2. VISITA SIMULATA
-# ============================================
-
 async def simulate_visit(url, proxy_url):
     if not url:
         return False
@@ -101,7 +97,6 @@ async def simulate_visit(url, proxy_url):
                 ]
             )
             
-            # User-Agent casuale
             user_agents = [
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36',
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36',
@@ -118,62 +113,85 @@ async def simulate_visit(url, proxy_url):
             
             page = await context.new_page()
             
-            # Nasconde il segno di automazione
             await page.add_init_script("""
                 Object.defineProperty(navigator, 'webdriver', {
                     get: () => undefined
                 });
             """)
             
-            # === MODIFICA QUI ===
-            # Usa 'load' invece di 'networkidle'
-            await page.goto(url, wait_until='load', timeout=30000)
+            # === TENTATIVI DI CARICAMENTO ===
+            try:
+                # Primo tentativo: 'commit' (più veloce, non aspetta risorse)
+                logger.info("   🚀 Caricamento con 'commit'...")
+                await page.goto(url, wait_until='commit', timeout=15000)
+                await asyncio.sleep(3)  # Aspetta che il contenuto inizi a renderizzare
+                logger.info("   ✅ Caricamento base completato")
+                
+            except Exception as e1:
+                logger.warning(f"   ⚠️ Primo tentativo fallito: {e1}")
+                try:
+                    # Secondo tentativo: 'domcontentloaded'
+                    logger.info("   🚀 Secondo tentativo con 'domcontentloaded'...")
+                    await page.goto(url, wait_until='domcontentloaded', timeout=15000)
+                    await asyncio.sleep(3)
+                    logger.info("   ✅ Caricamento DOM completato")
+                except Exception as e2:
+                    logger.warning(f"   ⚠️ Secondo tentativo fallito: {e2}")
+                    try:
+                        # Terzo tentativo: 'load' con timeout più lungo
+                        logger.info("   🚀 Terzo tentativo con 'load'...")
+                        await page.goto(url, wait_until='load', timeout=20000)
+                        await asyncio.sleep(3)
+                        logger.info("   ✅ Caricamento completo")
+                    except Exception as e3:
+                        logger.warning(f"   ⚠️ Tutti i tentativi falliti: {e3}")
+                        logger.warning("   Continua comunque con la pagina parziale...")
             
-            # Aspetta che la pagina sia stabile
-            await asyncio.sleep(2)
-            
-            # === SCROLLING CON ALTERNATIVA ===
+            # === SCROLLING CON JAVASCRIPT ===
             logger.info("   📜 Scrolling...")
             
-            # Prova con JavaScript invece di mouse.wheel
+            # Aspetta che il body sia presente
             try:
-                # Scrolla gradualmente con JavaScript
-                for i in range(random.randint(3, 8)):
+                await page.wait_for_selector('body', timeout=5000)
+            except:
+                logger.warning("   ⚠️ Body non trovato, procedo comunque")
+            
+            # Scroll con JavaScript
+            for i in range(random.randint(3, 8)):
+                try:
                     scroll_amount = random.randint(200, 600)
                     await page.evaluate(f"window.scrollBy(0, {scroll_amount})")
                     await asyncio.sleep(random.uniform(0.8, 2.5))
-            except Exception as e:
-                logger.warning(f"   ⚠️ Errore scrolling JS: {e}")
-                # Fallback: mouse.wheel
-                for _ in range(random.randint(3, 8)):
-                    await page.mouse.wheel(delta_x=0, delta_y=random.randint(200, 600))
-                    await asyncio.sleep(random.uniform(0.8, 2.5))
+                except Exception as e:
+                    logger.debug(f"   ⚠️ Errore scrolling step {i}: {e}")
             
             logger.info("   ✅ Scrolling completato")
             
-            # Clicca su un link interno (se presente)
+            # === CERCA LINK INTERNI ===
             logger.info("   👆 Cerca link interno...")
-            links = await page.query_selector_all('a[href^="/"], a[href*="benaresfilm.com"]')
-            if links and random.random() < 0.6:
-                valid_links = []
-                for link in links:
-                    href = await link.get_attribute('href')
-                    if href and len(href) > 3 and not href.startswith('#'):
-                        valid_links.append(link)
-                
-                if valid_links:
-                    random_link = random.choice(valid_links)
-                    try:
-                        if await random_link.is_visible():
-                            href = await random_link.get_attribute('href')
-                            logger.info(f"   🔗 Clicca su: {href}")
-                            await random_link.click()
-                            await page.wait_for_load_state('networkidle', timeout=10000)
-                            await asyncio.sleep(random.uniform(2, 5))
-                            await page.go_back()
-                            await page.wait_for_load_state('networkidle')
-                    except Exception as e:
-                        logger.debug(f"   ⚠️ Errore click: {e}")
+            try:
+                links = await page.query_selector_all('a[href^="/"], a[href*="benaresfilm.com"]')
+                if links and random.random() < 0.6:
+                    valid_links = []
+                    for link in links:
+                        href = await link.get_attribute('href')
+                        if href and len(href) > 3 and not href.startswith('#'):
+                            valid_links.append(link)
+                    
+                    if valid_links:
+                        random_link = random.choice(valid_links)
+                        try:
+                            if await random_link.is_visible():
+                                href = await random_link.get_attribute('href')
+                                logger.info(f"   🔗 Clicca su: {href}")
+                                await random_link.click()
+                                await page.wait_for_load_state('networkidle', timeout=10000)
+                                await asyncio.sleep(random.uniform(2, 5))
+                                await page.go_back()
+                        except Exception as e:
+                            logger.debug(f"   ⚠️ Errore click: {e}")
+            except Exception as e:
+                logger.debug(f"   ⚠️ Errore ricerca link: {e}")
             
             # Attesa finale
             wait_time = random.uniform(5, 15)
