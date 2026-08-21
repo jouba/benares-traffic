@@ -13,6 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+- name: Test proxy connection
+  run: |
+    echo "🔍 Test proxy da GitHub Actions..."
+    curl -x http://${{ secrets.PROXY_USERNAME }}:${{ secrets.PROXY_PASSWORD }}@${{ secrets.PROXY_HOST }}:${{ secrets.PROXY_PORT }} \
+         -I https://www.google.com --max-time 10 || echo "❌ Proxy fallito"
+    
+    echo "🔍 Test sito senza proxy..."
+    curl -I https://www.benaresfilm.com --max-time 10 || echo "❌ Sito non raggiungibile"
+    
     - name: Checkout repository
       uses: actions/checkout@v6
     
